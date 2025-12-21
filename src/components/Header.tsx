@@ -29,12 +29,6 @@ export default function Header({ onEnrollClick, onLoginClick }: HeaderProps) {
             <a href="#features" className="text-gray-700 hover:text-crimson-600 font-medium transition-colors">
               Features
             </a>
-            <a href="#testimonials" className="text-gray-700 hover:text-crimson-600 font-medium transition-colors">
-              Success Stories
-            </a>
-            <a href="#faq" className="text-gray-700 hover:text-crimson-600 font-medium transition-colors">
-              FAQ
-            </a>
             {onLoginClick && (
               <button
                 onClick={onLoginClick}
