@@ -24,7 +24,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   enrollment: Enrollment | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: Error | null; user: User | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshEnrollment: () => Promise<void>;
@@ -117,9 +117,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (profileError) throw profileError;
 
-      return { error: null };
+      const { error: enrollmentError } = await supabase
+        .from('enrollments')
+        .insert([
+          {
+            user_id: data.user.id,
+            email: email,
+            enrollment_status: 'unpaid',
+            program_access: 'locked',
+            payment_amount: 97,
+          },
+        ]);
+
+      if (enrollmentError && enrollmentError.code !== '23505') {
+        throw enrollmentError;
+      }
+
+      return { error: null, user: data.user };
     } catch (error) {
-      return { error: error as Error };
+      return { error: error as Error, user: null };
     }
   };
 

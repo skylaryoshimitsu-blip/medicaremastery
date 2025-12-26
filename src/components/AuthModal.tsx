@@ -30,7 +30,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
 
     try {
       if (mode === 'signup') {
-        const { error: signUpError } = await signUp(
+        const { error: signUpError, user } = await signUp(
           formData.email,
           formData.password,
           formData.fullName,
@@ -38,14 +38,25 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
         );
 
         if (signUpError) throw signUpError;
+
+        console.log('✅ [SIGNUP] Account created successfully');
+        console.log('🔵 [SIGNUP] Redirecting to Stripe Payment Link...');
+
+        onSuccess();
+        onClose();
+
+        const stripePaymentUrl = 'https://buy.stripe.com/eVqaERa8Fah48ri99Q8k800';
+        window.open(stripePaymentUrl, '_blank');
+
+        console.log('✅ [SIGNUP] Payment link opened in new tab');
       } else {
         const { error: signInError } = await signIn(formData.email, formData.password);
 
         if (signInError) throw signInError;
-      }
 
-      onSuccess();
-      onClose();
+        onSuccess();
+        onClose();
+      }
     } catch (err: any) {
       setError(err.message || 'An error occurred. Please try again.');
     } finally {
