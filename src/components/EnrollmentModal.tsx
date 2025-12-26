@@ -51,72 +51,27 @@ export default function EnrollmentModal({ isOpen, onClose }: EnrollmentModalProp
           console.error('❌ [ENROLL] Database error:', dbError);
           throw dbError;
         }
+        setIsSubmitting(false);
         return;
       }
 
       console.log('✅ [ENROLL] Enrollment record created successfully');
-      console.log('🔵 [ENROLL] Calling Stripe Checkout Session API...');
+      console.log('🔵 [ENROLL] Redirecting to Stripe Payment Link...');
 
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const checkoutUrl = `${supabaseUrl}/functions/v1/create-checkout-session`;
-
-      console.log('🔵 [ENROLL] Request URL:', checkoutUrl);
-      console.log('🔵 [ENROLL] Request payload:', { userId: user.id, userEmail: user.email });
-
-      const response = await fetch(checkoutUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          userEmail: user.email,
-        }),
-      });
-
-      console.log('🔵 [ENROLL] Response status:', response.status, response.statusText);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('❌ [ENROLL] Checkout session creation failed:', errorData);
-        throw new Error(errorData.error || 'Failed to create checkout session');
-      }
-
-      const responseData = await response.json();
-      console.log('✅ [ENROLL] Checkout session created:', responseData);
-
-      const { url } = responseData;
-
-      if (!url) {
-        console.error('❌ [ENROLL] No checkout URL in response');
-        console.error('❌ [ENROLL] Full response:', responseData);
-        throw new Error('No checkout URL returned');
-      }
-
-      console.log('🔵 [ENROLL] FORCING HARD REDIRECT to Stripe Checkout');
-      console.log('🔵 [ENROLL] Redirect URL:', url);
-      console.log('🔵 [ENROLL] Setting redirect state...');
+      const stripePaymentUrl = 'https://buy.stripe.com/eVqaERa8Fah48ri99Q8k800';
 
       setIsRedirecting(true);
 
-      console.log('🔵 [ENROLL] Executing window.location.assign() NOW...');
+      window.open(stripePaymentUrl, '_blank');
+
+      console.log('✅ [ENROLL] Payment link opened in new tab');
 
       setTimeout(() => {
-        try {
-          window.location.assign(url);
-          console.log('🔵 [ENROLL] window.location.assign() executed');
-        } catch (redirectError) {
-          console.error('❌ [ENROLL] Redirect failed:', redirectError);
-          console.log('🔵 [ENROLL] Trying window.location.href as fallback');
-          window.location.href = url;
-        }
-      }, 100);
+        setIsRedirecting(false);
+        setIsSubmitting(false);
+        onClose();
+      }, 1000);
 
-      console.log('🔵 [ENROLL] Redirect scheduled - page will navigate in 100ms');
-
-      return;
     } catch (err: any) {
       console.error('❌ [ENROLL] Error during enrollment:', err);
       setError(err.message || 'Something went wrong. Please try again or contact support.');
@@ -144,12 +99,12 @@ export default function EnrollmentModal({ isOpen, onClose }: EnrollmentModalProp
               <div className="w-20 h-20 bg-crimson-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
                 <CreditCard className="w-10 h-10 text-crimson-600" />
               </div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-4">Redirecting to Stripe Checkout...</h3>
+              <h3 className="text-3xl font-bold text-gray-900 mb-4">Opening Payment Page...</h3>
               <p className="text-gray-600 text-lg">
-                Please wait while we redirect you to complete your payment.
+                A new tab has opened with your secure payment page.
               </p>
               <div className="mt-4 text-sm text-gray-500">
-                If you are not redirected automatically, please check your browser console.
+                If the tab didn't open, please check your pop-up blocker settings.
               </div>
             </div>
           ) : (
