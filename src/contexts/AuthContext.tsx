@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase, Entitlement } from '../lib/supabase';
 
 interface UserProfile {
   id: string;
@@ -23,11 +23,14 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   enrollment: Enrollment | null;
+  entitlement: Entitlement | null;
   loading: boolean;
+  hasActiveAccess: boolean;
   signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: Error | null; user: User | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshEnrollment: () => Promise<void>;
+  refreshEntitlement: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,7 +39,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
+  const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const hasActiveAccess = entitlement?.has_active_access && entitlement?.payment_verified || false;
 
   const fetchProfile = async (userId: string) => {
     const { data, error } = await supabase
@@ -62,9 +68,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const fetchEntitlement = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('entitlements')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (!error && data) {
+      setEntitlement(data);
+    } else {
+      setEntitlement(null);
+    }
+  };
+
   const refreshEnrollment = async () => {
     if (user) {
       await fetchEnrollment(user.id);
+    }
+  };
+
+  const refreshEntitlement = async () => {
+    if (user) {
+      await fetchEntitlement(user.id);
     }
   };
 
@@ -74,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         fetchProfile(session.user.id);
         fetchEnrollment(session.user.id);
+        fetchEntitlement(session.user.id);
       }
       setLoading(false);
     });
@@ -84,9 +111,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           await fetchProfile(session.user.id);
           await fetchEnrollment(session.user.id);
+          await fetchEntitlement(session.user.id);
         } else {
           setProfile(null);
           setEnrollment(null);
+          setEntitlement(null);
         }
         setLoading(false);
       })();
@@ -166,11 +195,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         profile,
         enrollment,
+        entitlement,
         loading,
+        hasActiveAccess,
         signUp,
         signIn,
         signOut,
         refreshEnrollment,
+        refreshEntitlement,
       }}
     >
       {children}

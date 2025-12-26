@@ -7,7 +7,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: window.localStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    flowType: 'implicit',
+    storageKey: 'medicare-mastery-auth',
+  }
+});
 
 export interface Enrollment {
   id: string;
@@ -19,4 +28,16 @@ export interface Enrollment {
   stripe_payment_intent_id?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface Entitlement {
+  id: string;
+  user_id: string;
+  has_active_access: boolean;
+  payment_verified: boolean;
+  stripe_payment_intent_id: string | null;
+  stripe_customer_id: string | null;
+  created_at: string;
+  updated_at: string;
+  expires_at: string | null;
 }

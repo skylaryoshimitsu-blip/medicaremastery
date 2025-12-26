@@ -38,17 +38,40 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
         );
 
         if (signUpError) throw signUpError;
+        if (!user) throw new Error('No user returned from signup');
 
         console.log('✅ [SIGNUP] Account created successfully');
-        console.log('🔵 [SIGNUP] Redirecting to Stripe Payment Link...');
+        console.log('🔵 [SIGNUP] Creating Stripe checkout session...');
+
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+        const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            userEmail: formData.email,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create checkout session');
+        }
+
+        const { url } = await response.json();
+
+        console.log('✅ [SIGNUP] Checkout session created');
+        console.log('🔵 [SIGNUP] Redirecting to Stripe Checkout...');
 
         onSuccess();
         onClose();
 
-        const stripePaymentUrl = 'https://buy.stripe.com/eVqaERa8Fah48ri99Q8k800';
-        window.open(stripePaymentUrl, '_blank');
-
-        console.log('✅ [SIGNUP] Payment link opened in new tab');
+        window.location.href = url;
       } else {
         const { error: signInError } = await signIn(formData.email, formData.password);
 
