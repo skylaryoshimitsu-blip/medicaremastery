@@ -95,12 +95,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    const isAppDomain = window.location.hostname === 'app.medicaremastery.app' ||
+                        window.location.hostname === 'localhost';
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
-        fetchEnrollment(session.user.id);
-        fetchEntitlement(session.user.id);
+        if (isAppDomain) {
+          console.log('🔵 [AUTH] On app domain, fetching all user data');
+          fetchProfile(session.user.id);
+          fetchEnrollment(session.user.id);
+          fetchEntitlement(session.user.id);
+        } else {
+          console.log('🔵 [AUTH] On landing page, skipping data fetches');
+        }
       }
       setLoading(false);
     });
@@ -109,9 +117,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (async () => {
         setUser(session?.user ?? null);
         if (session?.user) {
-          await fetchProfile(session.user.id);
-          await fetchEnrollment(session.user.id);
-          await fetchEntitlement(session.user.id);
+          if (isAppDomain) {
+            console.log('🔵 [AUTH] Auth state changed on app domain, fetching data');
+            await fetchProfile(session.user.id);
+            await fetchEnrollment(session.user.id);
+            await fetchEntitlement(session.user.id);
+          } else {
+            console.log('🔵 [AUTH] Auth state changed on landing page, skipping data fetches');
+          }
         } else {
           setProfile(null);
           setEnrollment(null);
