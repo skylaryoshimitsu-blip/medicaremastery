@@ -46,12 +46,22 @@ export default function LoginPage({ onSuccess }: LoginPageProps) {
         throw new Error('Failed to check access status');
       }
 
+      const isLocalDev = window.location.hostname === 'localhost';
+
       if (entitlement && entitlement.has_active_access && entitlement.payment_verified) {
         console.log('✅ [LOGIN] User has active access, redirecting to dashboard');
-        window.location.href = 'https://app.medicaremastery.app';
+        if (isLocalDev) {
+          window.location.reload(); // Reload to show dashboard view
+        } else {
+          window.location.href = import.meta.env.VITE_APP_URL;
+        }
       } else {
-        console.log('❌ [LOGIN] User does not have active access, redirecting to pricing');
-        window.location.href = 'https://medicaremastery.app/pricing';
+        console.log('❌ [LOGIN] User does not have active access');
+        if (isLocalDev) {
+          window.location.reload(); // Reload to show landing view
+        } else {
+          window.location.href = import.meta.env.VITE_SITE_URL;
+        }
       }
 
       if (onSuccess) {
@@ -152,7 +162,7 @@ export default function LoginPage({ onSuccess }: LoginPageProps) {
             Don't have an account?
           </p>
           <a
-            href="https://medicaremastery.app"
+            href={import.meta.env.VITE_SITE_URL}
             className="text-crimson-600 hover:text-crimson-700 font-semibold text-sm"
           >
             Enroll in Medicare Mastery
@@ -161,7 +171,7 @@ export default function LoginPage({ onSuccess }: LoginPageProps) {
 
         <div className="mt-6 text-center">
           <a
-            href="https://medicaremastery.app"
+            href={import.meta.env.VITE_SITE_URL}
             className="text-gray-600 hover:text-gray-800 text-sm font-medium"
           >
             Back to home

@@ -45,8 +45,21 @@ function AppContent() {
 
     if (loading) return;
 
-    const isAppDomain = hostname === 'app.medicaremastery.app' || hostname === 'localhost';
+    const isLocalDev = hostname === 'localhost';
+    const isAppDomain = hostname === 'app.medicaremastery.app' || isLocalDev;
     const isRootRoute = path === '/';
+
+    // For local development, show landing page by default
+    if (isLocalDev) {
+      if (hasActiveAccess) {
+        console.log('✅ [APP] User has active access, showing dashboard');
+        setCurrentView('dashboard');
+      } else {
+        console.log('🔵 [APP] Showing landing page');
+        setCurrentView('landing');
+      }
+      return;
+    }
 
     if (isAppDomain && isRootRoute) {
       if (!user) {
@@ -56,8 +69,8 @@ function AppContent() {
         console.log('✅ [APP] User has active access, showing dashboard');
         setCurrentView('dashboard');
       } else {
-        console.log('❌ [APP] User has no active access, redirecting to pricing');
-        window.location.href = 'https://medicaremastery.app/pricing';
+        console.log('❌ [APP] User has no active access, redirecting to site');
+        window.location.href = import.meta.env.VITE_SITE_URL;
       }
       return;
     }
@@ -67,11 +80,11 @@ function AppContent() {
 
     if (isProtectedRoute) {
       if (!user) {
-        window.location.href = 'https://app.medicaremastery.app';
+        window.location.href = import.meta.env.VITE_APP_URL;
       } else if (hasActiveAccess) {
         setCurrentView('dashboard');
       } else {
-        window.location.href = 'https://medicaremastery.app/pricing';
+        window.location.href = import.meta.env.VITE_SITE_URL;
       }
     } else if (isPublicRoute) {
       setCurrentView('landing');
@@ -79,25 +92,13 @@ function AppContent() {
   }, [user, hasActiveAccess, loading]);
 
   const handleEnrollClick = () => {
-    console.log('🟢 [APP] Enroll button clicked on landing page');
-    console.log('🟢 [APP] User state:', user ? `Logged in as ${user.email}` : 'Not logged in');
-    console.log('🟢 [APP] Access state:', hasActiveAccess ? 'Has access' : 'No access');
-
-    if (!user) {
-      console.log('🟢 [APP] Opening authentication modal for signup');
-      setIsAuthModalOpen(true);
-    } else if (hasActiveAccess) {
-      console.log('🟢 [APP] User already has access, redirecting to dashboard');
-      window.location.href = 'https://app.medicaremastery.app';
-    } else {
-      console.log('🟢 [APP] User needs to complete payment, showing enrollment modal');
-      setIsEnrollmentModalOpen(true);
-    }
+    console.log('🟢 [APP] Enroll button clicked, redirecting to app');
+    window.location.href = 'https://app.medicaremastery.app/';
   };
 
   const handleLoginClick = () => {
-    console.log('🔵 [APP] Login button clicked, redirecting to app.medicaremastery.app');
-    window.location.href = 'https://app.medicaremastery.app';
+    console.log('🔵 [APP] Login button clicked, redirecting to app');
+    window.location.href = 'https://app.medicaremastery.app/';
   };
 
   const handleAuthSuccess = () => {
@@ -107,7 +108,7 @@ function AppContent() {
   const handleLoginSuccess = () => {
     if (hasActiveAccess) {
       console.log('✅ [APP] Login successful with active access, redirecting to dashboard');
-      window.location.href = 'https://app.medicaremastery.app';
+      window.location.href = import.meta.env.VITE_APP_URL;
     } else {
       console.log('⚠️ [APP] Login successful but no active access, staying on landing');
       setCurrentView('landing');

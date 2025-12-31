@@ -11,8 +11,9 @@ export default function SuccessPage() {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(countdownInterval);
-          console.log('🔵 [SUCCESS] Redirecting to app.medicaremastery.app');
-          window.location.href = 'https://app.medicaremastery.app';
+          console.log('🔵 [SUCCESS] Redirecting to app');
+          const isLocalDev = window.location.hostname === 'localhost';
+          window.location.href = isLocalDev ? '/' : import.meta.env.VITE_APP_URL;
           return 0;
         }
         return prev - 1;
