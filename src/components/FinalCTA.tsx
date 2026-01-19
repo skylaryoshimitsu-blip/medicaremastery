@@ -55,7 +55,7 @@ export default function FinalCTA({ onEnrollClick }: FinalCTAProps) {
 
         <div className="mt-12 text-sm text-gray-200">
           <p className="mb-2">70-Day Program Access • Expert Mentorship • Job Placement Support</p>
-          <p>Questions? Email support@medicaremastery.com or call (555) 123-4567</p>
+          <p>Questions? Email support@medicaremastery.app</p>
         </div>
       </div>
     </section>
